@@ -1,0 +1,13 @@
+*~
+wpa_supplicant-2.8/wpa_supplicant/*.d
+wpa_supplicant-2.8/wpa_supplicant/*.o
+wpa_supplicant-2.8/wpa_supplicant/*/*.d
+wpa_supplicant-2.8/wpa_supplicant/*/*.o
+wpa_supplicant-2.8/src/*/*.d
+wpa_supplicant-2.8/src/*/*.o
+wpa_supplicant-2.8/wpa_supplicant/.config
+wpa_supplicant-2.8/wpa_supplicant/wpa_cli
+wpa_supplicant-2.8/wpa_supplicant/wpa_passphrase
+wpa_supplicant-2.8/wpa_supplicant/wpa_supplicant
+wpa_supplicant.conf.backup
+cyberpunk*
