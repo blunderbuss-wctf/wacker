@@ -92,6 +92,10 @@ extern "C" {
 /** SAE authentication failed due to unknown password identifier */
 #define WPA_EVENT_SAE_UNKNOWN_PASSWORD_IDENTIFIER \
 	"CTRL-EVENT-SAE-UNKNOWN-PASSWORD-IDENTIFIER "
+/** auth success for our brute force stuff (WPA3) */
+#define WPA_EVENT_BRUTE_SUCCESS "CTRL-EVENT-BRUTE-SUCCESS "
+/** auth failure for our brute force stuff (WPA3) */
+#define WPA_EVENT_BRUTE_FAILURE "CTRL-EVENT-BRUTE-FAILURE "
 
 /** IP subnet status change notification
  *

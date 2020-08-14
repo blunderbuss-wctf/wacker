@@ -1125,8 +1125,10 @@ static int sme_sae_auth(struct wpa_supplicant *wpa_s, u16 auth_transaction,
 		return -1;
 	}
 
-	if (status_code != WLAN_STATUS_SUCCESS)
-		return -1;
+	if (status_code != WLAN_STATUS_SUCCESS) {
+                wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_BRUTE_FAILURE);
+                return -1;
+        }
 
 	if (auth_transaction == 1) {
 		u16 res;
@@ -1222,6 +1224,7 @@ void sme_external_auth_mgmt_rx(struct wpa_supplicant *wpa_s,
 
 		wpa_printf(MSG_DEBUG,
 			   "SME: SAE completed - setting PMK for 4-way handshake");
+                wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_BRUTE_SUCCESS);
 		wpa_sm_set_pmk(wpa_s->wpa, wpa_s->sme.sae.pmk, PMK_LEN,
 			       wpa_s->sme.sae.pmkid, wpa_s->pending_bssid);
 	}
@@ -1278,6 +1281,7 @@ void sme_event_auth(struct wpa_supplicant *wpa_s, union wpa_event_data *data)
 
 		wpa_printf(MSG_DEBUG, "SME: SAE completed - setting PMK for "
 			   "4-way handshake");
+                wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_BRUTE_SUCCESS);
 		wpa_sm_set_pmk(wpa_s->wpa, wpa_s->sme.sae.pmk, PMK_LEN,
 			       wpa_s->sme.sae.pmkid, wpa_s->pending_bssid);
 	}

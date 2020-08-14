@@ -1882,11 +1882,11 @@ static int _wpa_supplicant_event_scan_results(struct wpa_supplicant *wpa_s,
 	if (wpa_s->last_scan_req == MANUAL_SCAN_REQ &&
 	    wpa_s->manual_scan_use_id && wpa_s->own_scan_running &&
 	    own_request && !(data && data->scan_info.external_scan)) {
-		wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_SCAN_RESULTS "id=%u",
-			     wpa_s->manual_scan_id);
+          //wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_SCAN_RESULTS "id=%u",
+          //		     wpa_s->manual_scan_id);
 		wpa_s->manual_scan_use_id = 0;
 	} else {
-		wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_SCAN_RESULTS);
+          //wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_SCAN_RESULTS);
 	}
 	wpas_notify_scan_results(wpa_s);
 
@@ -3062,6 +3062,7 @@ static void wpa_supplicant_event_disassoc_finish(struct wpa_supplicant *wpa_s,
 		if (wpas_p2p_4way_hs_failed(wpa_s) > 0)
 			return; /* P2P group removed */
 		wpas_auth_failed(wpa_s, "WRONG_KEY");
+                wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_BRUTE_FAILURE);
 	}
 	if (!wpa_s->disconnected &&
 	    (!wpa_s->auto_reconnect_disabled ||
