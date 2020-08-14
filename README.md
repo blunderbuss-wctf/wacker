@@ -1,5 +1,5 @@
 # Overview
-A set of scripts to help perform an online dictionary attack against a WPA3 access point. Wacker leverages the wpa_supplicant control interface to control the operations of the supplicant daemon and to get status information and event notifications ultimately helping speedup connection attempts during brute force attemtps.
+A set of scripts to help perform an online dictionary attack against a WPA3 access point. Wacker leverages the wpa_supplicant control interface to control the operations of the supplicant daemon and to get status information and event notifications ultimately helping speedup connection attempts during brute force attempts.
 
 
 # Find a WPA3 AP to use
@@ -50,7 +50,7 @@ group_mgmt_cipher=AES-128-CMAC
 ```
 And start hostapd with
 ```
-hostapd -K -dd hostapd.conf
+# hostapd -K -dd hostapd.conf
 ```
 
 
