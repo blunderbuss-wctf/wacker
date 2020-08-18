@@ -1256,6 +1256,10 @@ void sme_event_auth(struct wpa_supplicant *wpa_s, union wpa_event_data *data)
 		return;
 	}
 
+// WPA3 brute: notify of success/failure earlier
+  if (data->auth.status_code == 1) wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_BRUTE_FAILURE);
+  if (data->auth.auth_transaction == 2 && data->auth.status_code == 0) wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_BRUTE_SUCCESS);
+
 	wpa_dbg(wpa_s, MSG_DEBUG, "SME: Authentication response: peer=" MACSTR
 		" auth_type=%d auth_transaction=%d status_code=%d",
 		MAC2STR(data->auth.peer), data->auth.auth_type,
