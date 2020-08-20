@@ -96,6 +96,8 @@ class Wacker(object):
         self.send_to_server(f'SET_NETWORK 0 ssid "{self.args.ssid}"')
         self.send_to_server(f'SET_NETWORK 0 key_mgmt SAE')
         self.send_to_server(f'SET_NETWORK 0 bssid {self.args.bssid}')
+        self.send_to_server(f'SET_NETWORK 0 scan_freq {self.args.freq}')
+        self.send_to_server(f'SET_NETWORK 0 freq_list {self.args.freq}')
         self.send_to_server(f'SET_NETWORK 0 ieee80211w 1')
         self.send_to_server(f'DISABLE_NETWORK 0')
         logging.debug(f'--- created network block 0 ---')
@@ -156,17 +158,12 @@ def check_interface(interface):
     return interface
 
 
-def check_file(file_path):
-    if not os.path.isfile(file_path):
-        raise argparse.ArgumentTypeError(f'{file_path} wordlist does exist')
-    return file_path
-
-
 parser = argparse.ArgumentParser(description='A WPA3 dictionary cracker. Must run as root!')
 parser.add_argument('--wordlist', type=argparse.FileType('r'), required=True, help='wordlist to use', dest='wordlist')
 parser.add_argument('--interface', type=check_interface, dest='interface', required=True, help='interface to use')
 parser.add_argument('--bssid', type=check_bssid, dest='bssid', required=True, help='bssid of the target')
 parser.add_argument('--ssid', type=str, dest='ssid', required=True, help='the ssid of the WPA3 AP')
+parser.add_argument('--freq', type=int, dest='freq', required=True, help='frequency of the ap')
 parser.add_argument('--start', type=str, dest='start_word', help='word to start with in the wordlist')
 
 args = parser.parse_args()

