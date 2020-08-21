@@ -108,7 +108,7 @@ class Wacker(object):
         self.send_to_server(f'ENABLE_NETWORK 0')
         self.send_to_server('SAVE_CONFIG')
 
-    def listen(self, count, word):
+    def listen(self, count):
         ''' Listen for responses from supplicant '''
         while True:
             datagram = self.sock.recv(2048)
@@ -119,30 +119,31 @@ class Wacker(object):
             data = datagram.decode().rstrip('\n')
             event = data.split()[0]
             logging.debug(data)
-            lapse = time.time() - self.start_time
+            self.print_stats(count)
             if event == "<3>CTRL-EVENT-BRUTE-FAILURE":
                 self.send_to_server(f'DISABLE_NETWORK 0')
-                logging.debug('\n{0} {1} seconds, count={2} {0}\n'.format("-"*15, lapse, count))
-                avg = count / lapse
-                spot = self.start_word + count
-                est = (self.total_count - spot) / avg
-                # truncating the passphrases on the printouts for now
-                print(f'{spot:9} / {self.total_count} words : {avg:6.2f} words/sec : {est:5.0f} secs to exhaust : word = {word[:10]:20}', end='\r')
                 return Wacker.FAILURE
             elif event == "<3>CTRL-EVENT-BRUTE-SUCCESS":
-                logging.debug('\n{0} {1} seconds, count={2} {0}\n'.format("-"*15, lapse, count))
-                avg = count / lapse
-                spot = self.start_word + count
-                est = (self.total_count - spot) / avg
-                print(f'{spot:9} / {self.total_count} words : {avg:6.2f} words/sec : {est:5.0f} secs to exhaust : word = {word}', end='\r')
                 return Wacker.SUCCESS
             else:
                 # do something with <3>CTRL-EVENT-SSID-TEMP-DISABLED ?
                 pass
 
+    def print_stats(self, count):
+        ''' Print some useful stats '''
+        lapse = time.time() - self.start_time
+        avg = count / lapse
+        spot = self.start_word + count
+        est = (self.total_count - spot) / avg
+        percent = spot / self.total_count * 100
+        end = time.strftime('%d %b %Y %H:%M:%S', time.localtime(start_time + est))
+        print(f'{spot:8} / {self.total_count:<8} words ({percent:2.2f}%) : {avg:6.2f} words/sec : ' \
+              f'{lapse/3600:5.3f} hours lapsed : {est/3600:6.2f} hours to exhaust ({end})', end='\r')
+        logging.debug('\n{0} {1} seconds, count={2} {0}\n'.format("-"*15, lapse, count))
+
     def kill(self):
         ''' Kill the supplicant '''
-        print(f'\nTime elapsed : {time.time() - self.start_time} seconds')
+        print('\nStop time: {}'.format(time.strftime('%d %b %Y %H:%M:%S', time.localtime(time.time()))))
         os.kill(int(open(self.pid).read()), signal.SIGKILL)
 
 
@@ -188,6 +189,7 @@ if args.start_word:
         wacker.kill()
 
 start_time = time.time()
+print('Start time: {}'.format(time.strftime('%d %b %Y %H:%M:%S', time.localtime(start_time))))
 wacker = Wacker(args, start_word, start_time)
 wacker.start_supplicant()
 wacker.create_uds_endpoints()
@@ -198,7 +200,7 @@ count = 1
 for word in args.wordlist:
     word = word.rstrip('\n')
     wacker.send_connection_attempt(word)
-    result = wacker.listen(count, word)
+    result = wacker.listen(count)
     if result == Wacker.SUCCESS:
         print(f"\nFound the password: '{word}'")
         break

