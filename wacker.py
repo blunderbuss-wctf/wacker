@@ -148,7 +148,7 @@ class Wacker(object):
 
 
 def check_bssid(mac):
-    if not re.match(r'^([0-9a-f]{2}(?::[0-9a-f]{2}){5})$', mac):
+    if not re.match(r'^([0-9a-fA-F]{2}(?::[0-9a-fA-F]{2}){5})$', mac):
         raise argparse.ArgumentTypeError(f'{mac} is not a valid bssid')
     return mac
 
