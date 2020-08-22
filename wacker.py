@@ -37,7 +37,7 @@ class Wacker(object):
         self.wpa  = './wpa_supplicant-2.8/wpa_supplicant/wpa_supplicant'
         self.pid  = f'{self.server}.pid'
         self.me = f'{self.dir}/{args.interface}_client'
-        self.cmd = f'{self.wpa} -P {self.pid} -d -B -i {self.args.interface} -c {self.conf} -f {self.log}'.split()
+        self.cmd = f'{self.wpa} -P {self.pid} -d -t -B -i {self.args.interface} -c {self.conf} -f {self.log}'.split()
         wpa_conf = 'ctrl_interface={}\nupdate_config=1\n\nnetwork={{\n}}'.format(self.dir)
         self.total_count = int(subprocess.check_output(f'wc -l {args.wordlist.name}', shell=True).split()[0].decode('utf-8'))
 
