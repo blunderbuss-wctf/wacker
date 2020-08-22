@@ -38,7 +38,7 @@ class Wacker(object):
         self.pid  = f'{self.server}.pid'
         self.me = f'{self.dir}/{args.interface}_client'
         self.cmd = f'{self.wpa} -P {self.pid} -d -t -B -i {self.args.interface} -c {self.conf} -f {self.log}'.split()
-        wpa_conf = 'ctrl_interface={}\nupdate_config=1\n\nnetwork={{\n}}'.format(self.dir)
+        wpa_conf = 'ctrl_interface={}\n\nnetwork={{\n}}'.format(self.dir)
         self.total_count = int(subprocess.check_output(f'wc -l {args.wordlist.name}', shell=True).split()[0].decode('utf-8'))
 
         # Create supplicant dir and conf (first be destructive)
@@ -106,7 +106,6 @@ class Wacker(object):
         ''' Send a connection request to supplicant'''
         self.send_to_server(f'SET_NETWORK 0 sae_password "{psk}"')
         self.send_to_server(f'ENABLE_NETWORK 0')
-        self.send_to_server('SAVE_CONFIG')
 
     def listen(self, count):
         ''' Listen for responses from supplicant '''
