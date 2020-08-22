@@ -118,19 +118,21 @@ class Wacker(object):
             data = datagram.decode().rstrip('\n')
             event = data.split()[0]
             logging.debug(data)
-            self.print_stats(count)
+            lapse = time.time() - self.start_time
+            self.print_stats(count, lapse)
             if event == "<3>CTRL-EVENT-BRUTE-FAILURE":
                 self.send_to_server(f'DISABLE_NETWORK 0')
+                logging.debug('\n{0} {1} seconds, count={2} {0}\n'.format("-"*15, lapse, count))
                 return Wacker.FAILURE
             elif event == "<3>CTRL-EVENT-BRUTE-SUCCESS":
+                logging.debug('\n{0} {1} seconds, count={2} {0}\n'.format("-"*15, lapse, count))
                 return Wacker.SUCCESS
             else:
                 # do something with <3>CTRL-EVENT-SSID-TEMP-DISABLED ?
                 pass
 
-    def print_stats(self, count):
+    def print_stats(self, count, lapse):
         ''' Print some useful stats '''
-        lapse = time.time() - self.start_time
         avg = count / lapse
         spot = self.start_word + count
         est = (self.total_count - spot) / avg
@@ -138,7 +140,6 @@ class Wacker(object):
         end = time.strftime('%d %b %Y %H:%M:%S', time.localtime(start_time + est))
         print(f'{spot:8} / {self.total_count:<8} words ({percent:2.2f}%) : {avg:6.2f} words/sec : ' \
               f'{lapse/3600:5.3f} hours lapsed : {est/3600:6.2f} hours to exhaust ({end})', end='\r')
-        logging.debug('\n{0} {1} seconds, count={2} {0}\n'.format("-"*15, lapse, count))
 
     def kill(self):
         ''' Kill the supplicant '''
