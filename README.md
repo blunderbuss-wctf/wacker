@@ -45,7 +45,7 @@ wpa=2
 wpa_passphrase=Aeromechanics
 wpa_key_mgmt=SAE
 rsn_pairwise=CCMP
-ieee80211w=1
+ieee80211w=2
 group_mgmt_cipher=AES-128-CMAC
 ```
 And start hostapd with
