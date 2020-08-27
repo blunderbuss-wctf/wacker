@@ -3062,7 +3062,6 @@ static void wpa_supplicant_event_disassoc_finish(struct wpa_supplicant *wpa_s,
 		if (wpas_p2p_4way_hs_failed(wpa_s) > 0)
 			return; /* P2P group removed */
 		wpas_auth_failed(wpa_s, "WRONG_KEY");
-                wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_BRUTE_FAILURE);
 	}
 	if (!wpa_s->disconnected &&
 	    (!wpa_s->auto_reconnect_disabled ||
