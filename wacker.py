@@ -37,7 +37,10 @@ class Wacker(object):
         self.wpa  = './wpa_supplicant-2.8/wpa_supplicant/wpa_supplicant'
         self.pid  = f'{self.server}.pid'
         self.me = f'{self.dir}/{args.interface}_client'
-        self.cmd = f'{self.wpa} -P {self.pid} -d -t -B -i {self.args.interface} -c {self.conf} -f {self.log}'.split()
+        self.cmd = f'{self.wpa} -P {self.pid} -B -i {self.args.interface} -c {self.conf}'
+        if args.debug:
+            self.cmd += f' -d -t -f {self.log}'
+        self.cmd = self.cmd.split()
         wpa_conf = 'ctrl_interface={}\n\nnetwork={{\n}}'.format(self.dir)
         self.total_count = int(subprocess.check_output(f'wc -l {args.wordlist.name}', shell=True).split()[0].decode('utf-8'))
 
@@ -47,7 +50,8 @@ class Wacker(object):
         with open(self.conf, 'w') as f:
             f.write(wpa_conf)
 
-        logging.basicConfig(level=logging.DEBUG, filename=f'{self.server}_wacker.log', filemode='w', format='%(message)s')
+        loglvl = logging.DEBUG if args.debug else logging.INFO
+        logging.basicConfig(level=loglvl, filename=f'{self.server}_wacker.log', filemode='w', format='%(message)s')
 
     def create_uds_endpoints(self):
         ''' Create unix domain socket endpoints '''
@@ -63,7 +67,7 @@ class Wacker(object):
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
         self.sock.bind(self.me)
 
-        logging.debug(f'Connecting to {self.server}')
+        logging.info(f'Connecting to {self.server}')
         try:
             self.sock.connect(self.server)
         except Exception:
@@ -74,7 +78,7 @@ class Wacker(object):
         print(f'Starting wpa_supplicant...')
         proc = subprocess.Popen(self.cmd)
         time.sleep(2)
-        logging.debug(f'Started wpa_supplicant')
+        logging.info(f'Started wpa_supplicant')
 
         # Double check it's running
         mode = os.stat(self.server).st_mode
@@ -104,6 +108,7 @@ class Wacker(object):
 
     def send_connection_attempt(self, psk):
         ''' Send a connection request to supplicant'''
+        logging.info(f'Trying key: {psk}')
         self.send_to_server(f'SET_NETWORK 0 sae_password "{psk}"')
         self.send_to_server(f'ENABLE_NETWORK 0')
 
@@ -112,7 +117,7 @@ class Wacker(object):
         while True:
             datagram = self.sock.recv(2048)
             if not datagram:
-                logging.debug('WTF!!!! datagram is null?!?!?! Exiting.')
+                logging.error('WTF!!!! datagram is null?!?!?! Exiting.')
                 return Wacker.RETRY
 
             data = datagram.decode().rstrip('\n')
@@ -121,10 +126,12 @@ class Wacker(object):
             lapse = time.time() - self.start_time
             self.print_stats(count, lapse)
             if event == "<3>CTRL-EVENT-BRUTE-FAILURE":
+                logging.info('BRUTE ATTEMPT FAIL')
                 self.send_to_server(f'DISABLE_NETWORK 0')
                 logging.debug('\n{0} {1} seconds, count={2} {0}\n'.format("-"*15, lapse, count))
                 return Wacker.FAILURE
             elif event == "<3>CTRL-EVENT-BRUTE-SUCCESS":
+                logging.info('BRUTE ATTEMPT SUCCESS')
                 logging.debug('\n{0} {1} seconds, count={2} {0}\n'.format("-"*15, lapse, count))
                 return Wacker.SUCCESS
             else:
@@ -166,6 +173,7 @@ parser.add_argument('--bssid', type=check_bssid, dest='bssid', required=True, he
 parser.add_argument('--ssid', type=str, dest='ssid', required=True, help='the ssid of the WPA3 AP')
 parser.add_argument('--freq', type=int, dest='freq', required=True, help='frequency of the ap')
 parser.add_argument('--start', type=str, dest='start_word', help='word to start with in the wordlist')
+parser.add_argument('--debug', action='store_true', help='increase logging output')
 
 args = parser.parse_args()
 

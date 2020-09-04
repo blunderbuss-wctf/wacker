@@ -110,7 +110,7 @@ The wacker.py script is intended to perform all the heavy lifting.
 ```
 # ./wacker.py --help
 usage: wacker.py [-h] --wordlist WORDLIST --interface INTERFACE --bssid BSSID
-                 --ssid SSID --freq FREQ [--start START_WORD]
+                 --ssid SSID --freq FREQ [--start START_WORD] [--debug]
 
 A WPA3 dictionary cracker. Must run as root!
 
@@ -123,6 +123,7 @@ optional arguments:
   --ssid SSID           the ssid of the WPA3 AP
   --freq FREQ           frequency of the ap
   --start START_WORD    word to start with in the wordlist
+  --debug               increase logging output
 ```
 With any luck... running the attack using just one instance...
 ```
@@ -147,7 +148,7 @@ wacker is quite verbose. Files of interest are found under <b>/tmp/wpa_supplican
  - wlan1 : one end of the uds
  - wlan1_client : one end of the uds
  - wlan1.conf : initial wpa_supplicant conf needed
- - wlan1.log : supplicant output
+ - wlan1.log : supplicant output (only when using --debug option)
  - wlan1.pid : pid file for the wpa_supplciant instance
  - wlan1_wacker.log : wacker debug output
 
