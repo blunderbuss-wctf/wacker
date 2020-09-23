@@ -39,7 +39,7 @@ class Wacker(object):
         self.me = f'{self.dir}/{args.interface}_client'
         self.cmd = f'{self.wpa} -P {self.pid} -B -i {self.args.interface} -c {self.conf}'
         if args.debug:
-            self.cmd += f' -d -t -f {self.log}'
+            self.cmd += f' -d -t -K -f {self.log}'
         self.cmd = self.cmd.split()
         wpa_conf = 'ctrl_interface={}\n\nnetwork={{\n}}'.format(self.dir)
         self.total_count = int(subprocess.check_output(f'wc -l {args.wordlist.name}', shell=True).split()[0].decode('utf-8'))
