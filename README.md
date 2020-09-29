@@ -144,7 +144,7 @@ Running multiple instances of wacker is easy if you have the spare nics. Don't f
 ```
 
 # Files of interest
-wacker is quite verbose. Files of interest are found under <b>/tmp/wpa_supplicant/</b>
+wacker is quite verbose. Files of interest are found under <b>/tmp/wacker/</b>
  - wlan1 : one end of the uds
  - wlan1_client : one end of the uds
  - wlan1.conf : initial wpa_supplicant conf needed

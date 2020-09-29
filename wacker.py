@@ -30,7 +30,7 @@ class Wacker(object):
         self.args = args
         self.start_time = start_time
         self.start_word = start_word
-        self.dir  = f'/tmp/wpa_supplicant'
+        self.dir  = f'/tmp/wacker'
         self.server = f'{self.dir}/{args.interface}'
         self.conf = f'{self.server}.conf'
         self.log  = f'{self.server}.log'
