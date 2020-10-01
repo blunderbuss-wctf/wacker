@@ -15,6 +15,7 @@ import time
 def kill(sig, frame):
     try:
         wacker.kill()
+        print(f'Stopped at password attempt: {word}')
     except:
         pass
     sys.exit(0)
