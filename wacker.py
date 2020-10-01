@@ -195,7 +195,7 @@ if args.start_word:
         start_word += 1
     else:
         print(f'Requested start word "{args.start_word}" not found!')
-        wacker.kill()
+        sys.exit(1)
 
 start_time = time.time()
 print('Start time: {}'.format(time.strftime('%d %b %Y %H:%M:%S', time.localtime(start_time))))
