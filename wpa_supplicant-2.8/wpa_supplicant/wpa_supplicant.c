@@ -6713,6 +6713,9 @@ void wpas_connection_failed(struct wpa_supplicant *wpa_s, const u8 *bssid)
 		return;
 	}
 
+	wpa_dbg(wpa_s, MSG_DEBUG, "Preventing blacklist addition and rescan");
+	return;
+
 	/*
 	 * Add the failed BSSID into the blacklist and speed up next scan
 	 * attempt if there could be other APs that could accept association.
