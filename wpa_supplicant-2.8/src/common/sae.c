@@ -463,7 +463,8 @@ static int sae_derive_pwe_ecc(struct sae_data *sae, const u8 *addr1,
 			      const u8 *addr2, const u8 *password,
 			      size_t password_len, const char *identifier)
 {
-	u8 counter, k = 40;
+	//u8 counter, k = 40;
+	u8 counter, k = 1; // remove constant time loop
 	u8 addrs[2 * ETH_ALEN];
 	const u8 *addr[3];
 	size_t len[3];
