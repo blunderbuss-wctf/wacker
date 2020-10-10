@@ -27,9 +27,8 @@ class Wacker(object):
     SUCCESS = 1
     FAILURE = 2
 
-    def __init__(self, args, start_word, start_time):
+    def __init__(self, args, start_word):
         self.args = args
-        self.start_time = start_time
         self.start_word = start_word
         self.dir  = f'/tmp/wacker'
         self.server = f'{self.dir}/{args.interface}'
@@ -53,6 +52,17 @@ class Wacker(object):
 
         loglvl = logging.DEBUG if args.debug else logging.INFO
         logging.basicConfig(level=loglvl, filename=f'{self.server}_wacker.log', filemode='w', format='%(message)s')
+
+        # Initial supplicant setup
+        self.start_supplicant()
+        self.create_uds_endpoints()
+        self.one_time_setup()
+
+        # Create rolling average for pwd/sec
+        self.rolling = [0] * 150
+        self.start_time = time.time()
+        self.lapse = self.start_time
+        print('Start time: {}'.format(time.strftime('%d %b %Y %H:%M:%S', time.localtime(self.start_time))))
 
     def create_uds_endpoints(self):
         ''' Create unix domain socket endpoints '''
@@ -105,7 +115,7 @@ class Wacker(object):
         self.send_to_server(f'SET_NETWORK 0 freq_list {self.args.freq}')
         self.send_to_server(f'SET_NETWORK 0 ieee80211w 1')
         self.send_to_server(f'DISABLE_NETWORK 0')
-        logging.debug(f'--- created network block 0 ---')
+        logging.debug(f'--- created network block 0 ---\n')
 
     def send_connection_attempt(self, psk):
         ''' Send a connection request to supplicant'''
@@ -124,30 +134,35 @@ class Wacker(object):
             data = datagram.decode().rstrip('\n')
             event = data.split()[0]
             logging.debug(data)
-            lapse = time.time() - self.start_time
-            self.print_stats(count, lapse)
             if event == "<3>CTRL-EVENT-BRUTE-FAILURE":
-                logging.info('BRUTE ATTEMPT FAIL')
+                self.print_stats(count)
                 self.send_to_server(f'DISABLE_NETWORK 0')
-                logging.debug('\n{0} {1} seconds, count={2} {0}\n'.format("-"*15, lapse, count))
+                logging.info('BRUTE ATTEMPT FAIL\n')
                 return Wacker.FAILURE
             elif event == "<3>CTRL-EVENT-BRUTE-SUCCESS":
-                logging.info('BRUTE ATTEMPT SUCCESS')
-                logging.debug('\n{0} {1} seconds, count={2} {0}\n'.format("-"*15, lapse, count))
+                self.print_stats(count)
+                logging.info('BRUTE ATTEMPT SUCCESS\n')
                 return Wacker.SUCCESS
-            else:
-                # do something with <3>CTRL-EVENT-SSID-TEMP-DISABLED ?
-                pass
 
-    def print_stats(self, count, lapse):
+    def print_stats(self, count):
         ''' Print some useful stats '''
-        avg = count / lapse
+        current = time.time()
+        avg = 1 / (current - self.lapse)
+        self.lapse = current
+        # create rolling average
+        if count <= 150:
+            self.rolling[count-1] = avg
+            avg = sum(self.rolling[:count]) / count
+        else:
+            self.rolling[(count-1) % 150] = avg
+            avg = sum(self.rolling) / 150
         spot = self.start_word + count
         est = (self.total_count - spot) / avg
         percent = spot / self.total_count * 100
-        end = time.strftime('%d %b %Y %H:%M:%S', time.localtime(start_time + est))
-        print(f'{spot:8} / {self.total_count:<8} words ({percent:2.2f}%) : {avg:6.2f} words/sec : ' \
-              f'{lapse/3600:5.3f} hours lapsed : {est/3600:6.2f} hours to exhaust ({end})', end='\r')
+        end = time.strftime('%d %b %Y %H:%M:%S', time.localtime(current + est))
+        lapse = current - self.start_time
+        print(f'{spot:8} / {self.total_count:<8} words ({percent:2.2f}%) : {avg:4.0f} words/sec : ' \
+              f'{lapse/3600:5.3f} hours lapsed : {est/3600:8.2f} hours to exhaust ({end})', end='\r')
 
     def kill(self):
         ''' Kill the supplicant '''
@@ -197,12 +212,7 @@ if args.start_word:
         print(f'Requested start word "{args.start_word}" not found!')
         sys.exit(1)
 
-start_time = time.time()
-print('Start time: {}'.format(time.strftime('%d %b %Y %H:%M:%S', time.localtime(start_time))))
-wacker = Wacker(args, start_word, start_time)
-wacker.start_supplicant()
-wacker.create_uds_endpoints()
-wacker.one_time_setup()
+wacker = Wacker(args, start_word)
 
 # Start the cracking
 count = 1
