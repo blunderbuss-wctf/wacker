@@ -1932,6 +1932,8 @@ static void sme_auth_timer(void *eloop_ctx, void *timeout_ctx)
 	if (wpa_s->wpa_state == WPA_AUTHENTICATING) {
 		wpa_msg(wpa_s, MSG_DEBUG, "SME: Authentication timeout");
 		sme_deauth(wpa_s);
+		wpa_dbg(wpa_s, MSG_DEBUG, "WPA_EVENT_BRUTE_RETRY");
+		wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_BRUTE_RETRY);
 	}
 }
 

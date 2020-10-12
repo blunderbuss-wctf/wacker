@@ -96,6 +96,8 @@ extern "C" {
 #define WPA_EVENT_BRUTE_SUCCESS "CTRL-EVENT-BRUTE-SUCCESS "
 /** auth failure for our brute force stuff (WPA3) */
 #define WPA_EVENT_BRUTE_FAILURE "CTRL-EVENT-BRUTE-FAILURE "
+/** retry for our brute force stuff (WPA3) */
+#define WPA_EVENT_BRUTE_RETRY "CTRL-EVENT-BRUTE-RETRY "
 
 /** IP subnet status change notification
  *

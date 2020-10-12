@@ -143,6 +143,10 @@ class Wacker(object):
                 self.print_stats(count)
                 logging.info('BRUTE ATTEMPT SUCCESS\n')
                 return Wacker.SUCCESS
+            elif event == "<3>CTRL-EVENT-BRUTE-RETRY":
+                logging.info('BRUTE ATTEMPT RETRY\n')
+                self.send_to_server(f'DISABLE_NETWORK 0')
+                return Wacker.RETRY
 
     def print_stats(self, count):
         ''' Print some useful stats '''
@@ -214,17 +218,21 @@ if args.start_word:
 
 wacker = Wacker(args, start_word)
 
+def attempt(word, count):
+    while True:
+        wacker.send_connection_attempt(word)
+        result = wacker.listen(count)
+        if result != Wacker.RETRY:
+            return result
+
 # Start the cracking
 count = 1
 for word in args.wordlist:
     word = word.rstrip('\n')
-    wacker.send_connection_attempt(word)
-    result = wacker.listen(count)
+    result = attempt(word, count)
     if result == Wacker.SUCCESS:
         print(f"\nFound the password: '{word}'")
         break
-    #elif result == Wacker.RETRY:
-    #    pass
     count += 1
 else:
     print('\nFlag not found')
