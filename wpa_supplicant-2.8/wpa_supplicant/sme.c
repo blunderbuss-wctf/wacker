@@ -1895,6 +1895,8 @@ void sme_event_auth_timed_out(struct wpa_supplicant *wpa_s,
 	wpa_dbg(wpa_s, MSG_DEBUG, "SME: Authentication timed out");
 	wpas_connection_failed(wpa_s, wpa_s->pending_bssid);
 	wpa_supplicant_mark_disassoc(wpa_s);
+	wpa_dbg(wpa_s, MSG_DEBUG, "WPA_EVENT_BRUTE_RETRY");
+	wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_BRUTE_RETRY);
 }
 
 

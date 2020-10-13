@@ -2148,18 +2148,21 @@ int wpa_supplicant_fast_associate(struct wpa_supplicant *wpa_s)
 #ifdef CONFIG_NO_SCAN_PROCESSING
 	return -1;
 #else /* CONFIG_NO_SCAN_PROCESSING */
-	struct os_reltime now;
+	//struct os_reltime now;
 
 	wpa_s->ignore_post_flush_scan_res = 0;
 
 	if (wpa_s->last_scan_res_used == 0)
 		return -1;
 
+    // Always use the saved bss network config
+    /*
 	os_get_reltime(&now);
 	if (os_reltime_expired(&now, &wpa_s->last_scan, 5)) {
 		wpa_printf(MSG_DEBUG, "Fast associate: Old scan results");
 		return -1;
 	}
+    */
 
 	return wpas_select_network_from_last_scan(wpa_s, 0, 1);
 #endif /* CONFIG_NO_SCAN_PROCESSING */
