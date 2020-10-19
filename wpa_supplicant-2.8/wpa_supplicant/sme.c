@@ -1247,6 +1247,7 @@ void sme_event_auth(struct wpa_supplicant *wpa_s, union wpa_event_data *data)
 	if (wpa_s->wpa_state != WPA_AUTHENTICATING) {
 		wpa_dbg(wpa_s, MSG_DEBUG, "SME: Ignore authentication event "
 			"when not in authenticating state");
+		wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_BRUTE_RETRY);
 		return;
 	}
 
