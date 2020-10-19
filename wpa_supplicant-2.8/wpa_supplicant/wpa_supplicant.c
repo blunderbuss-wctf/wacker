@@ -6327,6 +6327,9 @@ static void wpas_periodic(void *eloop_ctx, void *timeout_ctx)
 	eloop_register_timeout(WPA_SUPPLICANT_CLEANUP_INTERVAL, 0,
 			       wpas_periodic, global, NULL);
 
+	// Don't clear our bss entry for the WPA3 attack
+	return;
+
 #ifdef CONFIG_P2P
 	if (global->p2p)
 		p2p_expire_peers(global->p2p);
