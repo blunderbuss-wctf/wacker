@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.7
+#!/usr/bin/env python3
 
 import argparse
 import logging
@@ -138,6 +138,10 @@ class Wacker(object):
                 self.print_stats(count)
                 self.send_to_server(f'DISABLE_NETWORK 0')
                 logging.info('BRUTE ATTEMPT FAIL\n')
+                return Wacker.FAILURE
+            elif event == "<3>CTRL-EVENT-NETWORK-NOT-FOUND":
+                self.send_to_server(f'DISABLE_NETWORK 0')
+                logging.info('NETWORK NOT FOUND\n')
                 return Wacker.FAILURE
             elif event == "<3>CTRL-EVENT-BRUTE-SUCCESS":
                 self.print_stats(count)
