@@ -11,6 +11,8 @@ import subprocess
 import sys
 import time
 
+assert sys.version_info >= (3,7)
+
 def kill(sig, frame):
     try:
         wacker.kill()
