@@ -145,6 +145,10 @@ class Wacker(object):
                 self.send_to_server(f'DISABLE_NETWORK 0')
                 logging.info('NETWORK NOT FOUND\n')
                 return Wacker.EXIT
+            elif event == "<3>CTRL-EVENT-SCAN-FAILED":
+                self.send_to_server(f'DISABLE_NETWORK 0')
+                logging.info('SCAN FAILURE')
+                return Wacker.EXIT
             elif event == "<3>CTRL-EVENT-BRUTE-SUCCESS":
                 self.print_stats(count)
                 logging.info('BRUTE ATTEMPT SUCCESS\n')
@@ -228,10 +232,10 @@ def attempt(word, count):
     while True:
         wacker.send_connection_attempt(word)
         result = wacker.listen(count)
-        if result != Wacker.RETRY:
-            return result
-        elif result == Wacker.EXIT:
+        if result == Wacker.EXIT:
             sys.exit(1)
+        elif result != Wacker.RETRY:
+            return result
 
 # Start the cracking
 count = 1
