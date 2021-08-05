@@ -11,7 +11,6 @@ import subprocess
 import sys
 import time
 
-
 def kill(sig, frame):
     try:
         wacker.kill()
@@ -26,6 +25,7 @@ class Wacker(object):
     RETRY = 0
     SUCCESS = 1
     FAILURE = 2
+    EXIT = 3
 
     def __init__(self, args, start_word):
         self.args = args
@@ -142,7 +142,7 @@ class Wacker(object):
             elif event == "<3>CTRL-EVENT-NETWORK-NOT-FOUND":
                 self.send_to_server(f'DISABLE_NETWORK 0')
                 logging.info('NETWORK NOT FOUND\n')
-                return Wacker.FAILURE
+                return Wacker.EXIT
             elif event == "<3>CTRL-EVENT-BRUTE-SUCCESS":
                 self.print_stats(count)
                 logging.info('BRUTE ATTEMPT SUCCESS\n')
@@ -228,6 +228,8 @@ def attempt(word, count):
         result = wacker.listen(count)
         if result != Wacker.RETRY:
             return result
+        elif result == Wacker.EXIT:
+            sys.exit(1)
 
 # Start the cracking
 count = 1
