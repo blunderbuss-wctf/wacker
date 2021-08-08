@@ -233,7 +233,7 @@ def attempt(word, count):
         wacker.send_connection_attempt(word)
         result = wacker.listen(count)
         if result == Wacker.EXIT:
-            sys.exit(1)
+            kill(None, None)
         elif result != Wacker.RETRY:
             return result
 
