@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.7
+#!/usr/bin/env python3
 
 import argparse
 import logging
@@ -11,6 +11,7 @@ import subprocess
 import sys
 import time
 
+assert sys.version_info >= (3,7)
 
 def kill(sig, frame):
     try:
@@ -26,6 +27,7 @@ class Wacker(object):
     RETRY = 0
     SUCCESS = 1
     FAILURE = 2
+    EXIT = 3
 
     def __init__(self, args, start_word):
         self.args = args
@@ -139,6 +141,14 @@ class Wacker(object):
                 self.send_to_server(f'DISABLE_NETWORK 0')
                 logging.info('BRUTE ATTEMPT FAIL\n')
                 return Wacker.FAILURE
+            elif event == "<3>CTRL-EVENT-NETWORK-NOT-FOUND":
+                self.send_to_server(f'DISABLE_NETWORK 0')
+                logging.info('NETWORK NOT FOUND\n')
+                return Wacker.EXIT
+            elif event == "<3>CTRL-EVENT-SCAN-FAILED":
+                self.send_to_server(f'DISABLE_NETWORK 0')
+                logging.info('SCAN FAILURE')
+                return Wacker.EXIT
             elif event == "<3>CTRL-EVENT-BRUTE-SUCCESS":
                 self.print_stats(count)
                 logging.info('BRUTE ATTEMPT SUCCESS\n')
@@ -222,7 +232,9 @@ def attempt(word, count):
     while True:
         wacker.send_connection_attempt(word)
         result = wacker.listen(count)
-        if result != Wacker.RETRY:
+        if result == Wacker.EXIT:
+            sys.exit(1)
+        elif result != Wacker.RETRY:
             return result
 
 # Start the cracking
