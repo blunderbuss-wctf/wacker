@@ -147,7 +147,9 @@ class Wacker(object):
                 return Wacker.FAILURE
             elif event == "<3>CTRL-EVENT-NETWORK-NOT-FOUND":
                 self.send_to_server(f'DISABLE_NETWORK 0')
-                logging.info('NETWORK NOT FOUND\n')
+                msg = f'No suitable target found for freq={self.args.freq}, bssid={self.args.bssid}, ssid={self.args.ssid}'
+                logging.info(f'NETWORK NOT FOUND\n{msg}')
+                print(f'\n{msg}')
                 return Wacker.EXIT
             elif event == "<3>CTRL-EVENT-SCAN-FAILED":
                 self.send_to_server(f'DISABLE_NETWORK 0')
