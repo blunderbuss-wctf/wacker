@@ -44,7 +44,7 @@ class Wacker(object):
         if args.debug:
             self.cmd += f' -d -t -K -f {self.log}'
         self.cmd = self.cmd.split()
-        wpa_conf = 'ctrl_interface={}\n\nnetwork={{\n}}'.format(self.dir)
+        wpa_conf = 'ctrl_interface={}\n\n{}network={{\n}}'.format(self.dir, ('sae_pwe=2\n\n', '')[args.brute_wpa2])
         self.total_count = int(subprocess.check_output(f'wc -l {args.wordlist.name}', shell=True).split()[0].decode('utf-8'))
 
         # Create supplicant dir and conf (first be destructive)
