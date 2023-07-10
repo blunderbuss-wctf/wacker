@@ -76,7 +76,7 @@ class Wacker(object):
                 raise
 
         # bring the interface up... won't connect otherwise
-        os.system(f'ifconfig {self.args.interface} up')
+        os.system(f'ip link set dev {self.args.interface} up')
 
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
         self.sock.bind(self.me)
